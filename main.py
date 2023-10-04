@@ -91,11 +91,11 @@ def main():
         else:
             user_input_list = user_input.split(" ")
             
-            if user_input_list[0] == "show":
+            if user_input_list[0].casefold() == "show":
                 user_input_list[:2] = [user_input_list[0]+' '+user_input_list[1]]
             
-            if user_input_list[0] in OPERATIONS:
-                sub_input = OPERATIONS[user_input_list[0]]
+            if user_input_list[0].casefold() in OPERATIONS:
+                sub_input = OPERATIONS[user_input_list[0].lower()]
                 print(sub_input(*user_input_list))
             else:
                 print('command not found')
