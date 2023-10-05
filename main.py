@@ -11,8 +11,8 @@ def decor_func(func):
             return "Not enough arguments"
         except KeyError:
             return "Name not in phone book"
-        # except TypeError:
-        #     return "Too much arguments"
+        except TypeError:
+                return "Too much arguments"
     return inner
 
 def decor_change(func):
@@ -23,83 +23,94 @@ def decor_change(func):
             return "Not enough arguments"
         except TypeError:
             return "No one argument"
+        except KeyError:
+            return "Name not in phone book"
     return inner
 
 # sub block -------------------------------------------------------------------------------------------------------
 @decor_func
-def sub_add(*user_input_list):
-    if user_input_list[1] not in phone_book:
-        good_phone = sanit_phone(user_input_list)
+def sub_add(*args):
+    ful_name = ""
+    args = list(args)
+    for i in args:
+        if not re.search(r'(\d|\+)',i):
+            ful_name += i + ' '       
+        else:
+            args = args[args.index(i):]
+            args.insert(0, ful_name.strip().title())
+            break
+
+    if args[0] not in phone_book:
+        good_phone = sanit_phone(args[1])
         if good_phone:
-            phone_book[user_input_list[1]] = good_phone
-            return f" Added {user_input_list[1]} - {good_phone} to phone book "
+            phone_book[args[0]] = good_phone
+            return f" Added {args[0]} - {good_phone} to phone book "
         else:
             return "Phone is incorrect"  
     else:
         return "Name already in phone book"
 
 @decor_func   
-def sub_show(*arg):
+def sub_show():
     pr_contacts = "All contacts \n"
     for name, phone in phone_book.items():
         pr_contacts += f"{name} - {phone} \n"
     return pr_contacts
 
 @decor_change
-def sub_change(*user_input_list):
-    if user_input_list[1] in phone_book:
-        good_phone = sanit_phone(user_input_list)
-        if good_phone:
-            phone_book[user_input_list[1]] = good_phone
-            return f" Changed {user_input_list[1]} - {good_phone} to phone book "
-        else:
-            return "Phone is incorrect"  
+def sub_change(*args):
+    good_phone = sanit_phone(args[1])
+    if good_phone:
+        del phone_book[args[0]]
+        phone_book[args[0]] = good_phone
+        return f" Changed {args[0]} - {good_phone} to phone book "
     else:
-        return "Name not in phone book"
+        return "Phone is incorrect"  
 
 @decor_func 
-def sub_phone(*user_input_list):
-    return (f'{user_input_list[1]} - {phone_book[user_input_list[1]]}')
+def sub_phone(*args):
+    return (f'{args[0]} - {phone_book[args[0]]}')
+
+@decor_func
+def sub_hello():
+    return "How can I help you?"
+
+@decor_func
+def sub_exit():
+    return "Good bye!"
 
 OPERATIONS = {
-    "add" : sub_add,
-    "change" : sub_change,
-    "phone": sub_phone,
-    "show all" : sub_show
+    sub_hello : ("hello",), 
+    sub_add : ("add",),
+    sub_change : ("change",),
+    sub_phone : ("phone",),
+    sub_show : ("show all",),
+    sub_exit: ("good bye", "close", "exit", ".")
 }
 # end sub block ---------------------------------------------------------------------------------------------------
 
-def sanit_phone(user_input_list):
-        phone1 = re.findall('\d+', user_input_list[2])
+def sanit_phone(bad_phone):
+        phone1 = re.findall('\d+', bad_phone)
         phone2 = ''.join(phone1)
         if len(phone2) >= 10:
             return phone2
-        else:
-            return 
-
 
 def main():
     while True:
         user_input = input(">>> ")
-        
-        if user_input.casefold() == "hello":
-            print ("How can I help you?")
-        
-        elif user_input.casefold() in ("good bye", "close", "exit", '.'):
-            print ("Good bye!")
-            break
-        else:
-            user_input_list = user_input.split(" ")
-            
-            if user_input_list[0].casefold() == "show":
-                user_input_list[:2] = [user_input_list[0]+' '+user_input_list[1]]
-            
-            if user_input_list[0].casefold() in OPERATIONS:
-                sub_input = OPERATIONS[user_input_list[0].lower()]
-                print(sub_input(*user_input_list))
-            else:
-                print('command not found')
+        command_found = False        
+        for sub_f, command  in OPERATIONS.items():
+            if command_found:
+                break 
+            for com in command:
+                if user_input.casefold().startswith(com):
+                    print(sub_f(*user_input[len(com):].strip().split()))
+                    if sub_f == sub_exit:
+                        return
+                    command_found = True
+                    break
+        if not command_found:       
+            print("Command not found")
 
 if __name__ == '__main__':
-
-    main()
+    main() 
